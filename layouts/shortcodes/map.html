@@ -1,0 +1,23 @@
+{{- $src := .Get "src" | default (.Get 0) -}}
+{{- $ref := .Get "ref" | default (.Get 0) -}}
+{{- $coords := .Get "coords" | default (.Get 0) -}}
+{{ $pages := where .Site.RegularPages "Type" "in" .Site.Params.mainSections }}
+{{ $notHidden := where .Site.RegularPages "Params.hidden" "!=" true }}
+{{ $filtered := ($pages | intersect $notHidden) }}
+
+{{ $circleRadius := ",50" }}
+
+
+<img src="{{- $src -}}" alt="Workplace" usemap="#workmap">
+
+<map name="workmap">
+    {{ range $index, $element := $filtered }}
+        {{ $newCoords := print .Params.coords $circleRadius}}
+        <area 
+        shape="circle" 
+        coords = "{{ $newCoords }}"
+        alt="Computer" 
+        href="{{ .RelPermalink }}">
+    {{ end }}
+  
+</map>
