@@ -1,23 +1,48 @@
 {{- $src := .Get "src" | default (.Get 0) -}}
+{{- $redDot := .Get "redDot" | default (.Get 0) -}}
 {{- $ref := .Get "ref" | default (.Get 0) -}}
 {{- $coords := .Get "coords" | default (.Get 0) -}}
 {{ $pages := where .Site.RegularPages "Type" "in" .Site.Params.mainSections }}
 {{ $notHidden := where .Site.RegularPages "Params.hidden" "!=" true }}
 {{ $filtered := ($pages | intersect $notHidden) }}
 
-{{ $circleRadius := ",50" }}
+{{ $circleRadius := 20 }}
 
-
-<img src="{{- $src -}}" alt="Workplace" usemap="#workmap">
+    
+<div class="container">
+    <img src="{{- $src -}}" alt="Workplace" usemap="#workmap"/>
+    {{ range $index, $element := $filtered }}
+        {{ $newX := math.Sub (int .Params.coordsX) $circleRadius}}
+        {{ $newY := math.Sub (int .Params.coordsY) $circleRadius}}
+        {{ $v := print "left:" $newX "px;top:" $newY "px;" }}
+        <div class="circle" {{ printf "style=%q" $v | safeHTMLAttr }}></div>
+    {{ end }}
+</div>
 
 <map name="workmap">
     {{ range $index, $element := $filtered }}
-        {{ $newCoords := print .Params.coords $circleRadius}}
+        {{ $newCoords := print .Params.coordsX "," .Params.coordsY "," $circleRadius}}
         <area 
         shape="circle" 
         coords = "{{ $newCoords }}"
         alt="Computer" 
         href="{{ .RelPermalink }}">
+        {{- $newCoords -}}
     {{ end }}
   
 </map>
+
+<style>
+
+.container {
+    position: relative;
+}
+.circle {
+    position: absolute;
+    height: 40px;
+    width: 40px;
+    background-color: #f80000;
+    border-radius: 50%;
+    pointer-events: none;
+}
+</style>
