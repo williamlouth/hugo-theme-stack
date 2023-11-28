@@ -1,36 +1,120 @@
 {{- $src := .Get "src" | default (.Get 0) -}}
-{{- $redDot := .Get "redDot" | default (.Get 0) -}}
-{{- $ref := .Get "ref" | default (.Get 0) -}}
-{{- $coords := .Get "coords" | default (.Get 0) -}}
 {{ $pages := where .Site.RegularPages "Type" "in" .Site.Params.mainSections }}
 {{ $notHidden := where .Site.RegularPages "Params.hidden" "!=" true }}
 {{ $filtered := ($pages | intersect $notHidden) }}
 
-{{ $circleRadius := 20 }}
 
-    
+
 <div class="container">
-    <img src="{{- $src -}}" alt="Workplace" usemap="#workmap"/>
-    {{ range $index, $element := $filtered }}
-        {{ $newX := math.Sub (int .Params.coordsX) $circleRadius}}
-        {{ $newY := math.Sub (int .Params.coordsY) $circleRadius}}
-        {{ $v := print "left:" $newX "px;top:" $newY "px;" }}
-        <div class="circle" {{ printf "style=%q" $v | safeHTMLAttr }}></div>
+    <img src="{{- $src -}}" alt="Workplace" usemap="#workmap" id="imgId"/>
+    
+    <script>
+        const ids = [];
+        const coordsX = [];
+        const coordsY = [];
+        var currentIdx = 0;
+
+        var coordXList = [];
+        var coordYList = [];
+    </script>
+    
+
+    {{ range $pageIndex, $element := $filtered }}
+        {{ if .Params.noCoords}}
+            {{ $title := print .Params.title }}
+
+            {{ range $coordIndex, $num := (seq .Params.noCoords) }}
+                {{ $id := print "Visual" $title $coordIndex }}
+                <div class="circle" id="{{ $id }}"></div>
+            {{ end }}
+
+            {{- with .Params.noCoords }}
+                <script >
+                    var noCoords = '{{ . }}';
+                </script>
+            {{- end }}
+
+            {{- with .Params.title }}
+                <script >
+                    for (let i = 0; i < noCoords; i++){
+                        ids.push('{{ . }}' + i);
+                    }
+                    
+                </script>
+            {{- end }}
+
+            {{- with .Params.coordsX }}
+                <script >
+                    coordXList = '{{ . }}'.split(" ");
+
+                    for (let i = 0; i < noCoords; i++){
+                        coordsX.push(coordXList[i]);
+                    }
+                </script>
+            {{- end }}
+
+            {{- with .Params.coordsY }}
+                <script >
+                    coordYList = '{{ . }}'.split(" ");
+
+                    for (let i = 0; i < noCoords; i++){
+                        coordsY.push(coordYList[i]);
+                    }
+
+                </script>
+            {{- end }}
+        {{ end }}
+        
     {{ end }}
+
 </div>
 
 <map name="workmap">
-    {{ range $index, $element := $filtered }}
-        {{ $newCoords := print .Params.coordsX "," .Params.coordsY "," $circleRadius}}
-        <area 
-        shape="circle" 
-        coords = "{{ $newCoords }}"
-        alt="Computer" 
-        href="{{ .RelPermalink }}">
-        {{- $newCoords -}}
+    {{ range $pageIndex, $element := $filtered }}
+        {{ if .Params.noCoords}}
+            {{ $title := .Params.title }}
+            {{ $link := .RelPermalink }}
+
+            {{ range $coordIndex, $num := (seq .Params.noCoords) }}
+                {{ $id := print "Functional" $title $coordIndex}}
+                <area 
+                shape="circle" 
+                href="{{ $link }}"
+                id="{{ $id }}">
+            {{ end }}
+        {{ end }}
     {{ end }}
   
 </map>
+
+<script>
+    let circleRadius = 10;
+
+    window.onload = recalculateImRatio;
+    window.addEventListener('resize', recalculateImRatio);
+
+    function recalculateImRatio(){
+        let myImg = document.querySelector("#imgId");
+        let realWidth = myImg.naturalWidth;
+        let realHeight = myImg.naturalHeight;
+        let width = myImg.clientWidth;
+        let height = myImg.clientHeight;
+        let imRatio = width / realWidth;
+
+        // cycle through all circles
+        for (let i = 0; i < ids.length; i++){
+            var newX = (coordsX[i] - circleRadius) * imRatio;
+            var newY = (coordsY[i] - circleRadius) * imRatio;
+
+            document.getElementById("Visual" + ids[i]).style.left = newX + 'px';
+            document.getElementById("Visual" + ids[i]).style.top = newY + 'px';
+            document.getElementById("Visual" + ids[i]).style.width = (circleRadius * 2 * imRatio) + 'px';
+            document.getElementById("Visual" + ids[i]).style.height = (circleRadius * 2 * imRatio) + 'px';
+
+            document.getElementById("Functional" + ids[i]).coords = (coordsX[i] * imRatio) + ", " + (coordsY[i] * imRatio) + ", " + (circleRadius * imRatio);
+        }
+    }
+</script>
 
 <style>
 
@@ -39,8 +123,6 @@
 }
 .circle {
     position: absolute;
-    height: 40px;
-    width: 40px;
     background-color: #f80000;
     border-radius: 50%;
     pointer-events: none;
