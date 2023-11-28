@@ -74,8 +74,116 @@
             </a>
         </li>
         {{ end }}
+    </ol>
 
+    {{ with $currentPage }}
+    <script> console.log("{{ . }}") </script>
+    {{end}}
+
+    {{ if and (ne $currentPage.Title "Map") (not $currentPage.IsHome) }}
+    <div class="container">
+        {{ $imgSrc := "" }}
+        {{ with .Site.Params.sidebar.avatar }}
+            
+            {{ if not .local }}
+                {{ $imgSrc = .mapSrc }}
+            {{ else }}
+                {{ $map := resources.Get (.mapSrc) }}
+                {{ $imgSrc = $map.RelPermalink }}
+            {{ end }}
+
+        {{ end }}
+
+
+        {{ $url := (index .Site.Menus.main 1).URL}}
+        <a href="{{ $url }}">
+        <img src="{{ $imgSrc }}"  id="imgId2" width="200">
+        </a>
+
+        <script>
+            const ids2 = [];
+            const coordsX2 = [];
+            const coordsY2 = [];
+            var currentIdx = 0;
+    
+            var coordXList2 = [];
+            var coordYList2 = [];
+        </script>
+
+        {{ with $currentPage }}
+        {{ $title := print "2" .Params.title }}
+            {{ range $coordIndex, $num := (seq .Params.noCoords) }}
+                {{ $id := print "Visual" $title $coordIndex }}
+                <div class="circle" id="{{ $id }}"></div>
+            {{ end }}
+        
+            <script> 
+                var noCoords = '{{ .Params.noCoords }}';
+                for (let i = 0; i < noCoords; i++){
+                    ids2.push("2" + '{{ .Params.title }}' + i);
+                }
+                coordXList2 = '{{ .Params.coordsX }}'.split(" ");
+                for (let i = 0; i < noCoords; i++){
+                    coordsX2.push(coordXList2[i]);
+                }
+                coordYList2 = '{{ .Params.coordsY }}'.split(" ");
+                for (let i = 0; i < noCoords; i++){
+                    coordsY2.push(coordYList2[i]);
+                }
+            </script>
+        {{ end }}
+
+        </div>
+
+        <script>
+            let circleRadius2 = 10;
+        
+            window.onload = recalculateImRatio;
+            window.addEventListener('resize', recalculateImRatio);
+        
+            function recalculateImRatio(){
+                let myImg = document.querySelector("#imgId2");
+                let realWidth = myImg.naturalWidth;
+                let realHeight = myImg.naturalHeight;
+                let width = myImg.clientWidth;
+                let height = myImg.clientHeight;
+                let imRatio = width / realWidth;
+
+                console.log("im: " + width + " " + height + " " + realWidth);
+        
+                // cycle through all circles
+                for (let i = 0; i < ids2.length; i++){
+                    var newX = (coordsX2[i] - circleRadius2) * imRatio;
+                    var newY = (coordsY2[i] - circleRadius2) * imRatio;
+        
+                    document.getElementById("Visual" + ids2[i]).style.left = newX + 'px';
+                    document.getElementById("Visual" + ids2[i]).style.top = newY + 'px';
+                    document.getElementById("Visual" + ids2[i]).style.width = (circleRadius2 * 2 * imRatio) + 'px';
+                    document.getElementById("Visual" + ids2[i]).style.height = (circleRadius2 * 2 * imRatio) + 'px';
+
+                    console.log(newX + " , " + newY);
+                }
+            }
+        </script>
+        
+        <style>
+        
+        .container {
+            position: relative;
+        }
+        .circle {
+            position: absolute;
+            background-color: #f80000;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        </style>
+
+        {{ end }}
+    
+    <ol class="menu" id="main-menu">
         <div class="menu-bottom-section">
+
             {{- $currentLanguageCode := .Language.Lang -}}
             {{ with .Site.Home.AllTranslations }}
                 <li id="i18n-switch">  
