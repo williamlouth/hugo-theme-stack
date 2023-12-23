@@ -73,14 +73,24 @@
     {{ range $pageIndex, $element := $filtered }}
         {{ if .Params.noCoords}}
             {{ $title := .Params.title }}
-            {{ $link := .RelPermalink }}
+            {{ $linkToPage := .RelPermalink }}
+
+            {{- with .Params.headings }}
+            <script>
+                var headingsList = [];
+                headingsList = '{{ . }}'.split(" ");
+            </script>
+            {{- end }}
 
             {{ range $coordIndex, $num := (seq .Params.noCoords) }}
                 {{ $id := print "Functional" $title $coordIndex}}
                 <area 
                 shape="circle" 
-                href="{{ $link }}"
                 id="{{ $id }}">
+
+                <script>
+                    document.getElementById("{{ $id }}").href = "{{ $linkToPage }}" + headingsList["{{ $coordIndex }}"];
+                </script>
             {{ end }}
         {{ end }}
     {{ end }}
